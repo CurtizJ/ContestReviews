@@ -1,4 +1,4 @@
-#include<iostream>
+#include <iostream>
 
 class List {
 public:
@@ -17,8 +17,8 @@ private:
     Node *first, *last;
     int size_;
 
-    static void merge_sort(int sz, iterator left, iterator right, List& buffer);
-    static void merge(iterator left, iterator mid, iterator right, List& buffer);
+    static Node* merge_sort(int size, Node* left, Node* right);
+    static Node* merge(Node* left, Node* right);
 };
 
 struct List::Node {
@@ -97,48 +97,55 @@ ListIter List::end() const {
 } 
 
 void List::sort() {
-    List buffer;
-    for(int i = 0; i < size_; ++i) {
-        buffer.push_back(0);
-    }
-    merge_sort(size_, this->begin(), this->end(), buffer);
+    first = merge_sort(size_, first, last);
 }
 
 // MergeSort
 
-void List::merge_sort(int sz, ListIter left, ListIter right, List& buffer) {
-    if(sz == 1) {
-        return;
+List::Node* List::merge_sort(int size, Node* left, Node* right) {
+    if(size == 1) {
+        left->next = nullptr;
+        return left;
     }
     auto mid = left;
-    for(int i = 0; i < sz / 2; ++i) {
-        ++mid; 
+    for(int i = 0; i < size / 2; ++i) {
+        mid = mid->next;
     }
-    merge_sort(sz / 2, left, mid, buffer);
-    merge_sort(sz - sz / 2, mid, right, buffer);
-    merge(left, mid, right, buffer);
+    return merge(merge_sort(size / 2, left, mid), merge_sort(size - size / 2, mid, right));
 }
 
-void List::merge(ListIter left, ListIter mid, ListIter right, List& buffer) {
-    auto l = left, r = mid;
-    auto it = buffer.begin();
-    while(l != mid && r != right) {
-        if(*l < *r) {
-            *it++ = *l++;
+List::Node* List::merge(Node* left, Node* right) {
+    Node *first, *last;
+    if(right == nullptr || left->val < right->val) {
+        first = last = left;
+        left = left->next;
+    } else {
+        first = last = right;
+        right = right->next;
+    }
+    while(left != nullptr && right != nullptr) {
+        if(left->val < right->val) {
+            last->next = left;
+            last = left;
+            left = left->next;
         } else {
-            *it++ = *r++;
+            last->next = right;
+            last = right;
+            right = right->next;
         }
     }
-    while(l != mid) {
-        *it++ = *l++;
+    while(left != nullptr) {
+        last->next = left;
+        last = left;
+        left = left->next;
     }
-    while(r != right) {
-        *it++ = *r++;
+    while(right != nullptr) {
+        last->next = right;
+        last = right;
+        right = right->next;
     }
-    it = buffer.begin();
-    while(left != right) {
-        *left++ = *it++;
-    }
+    last->next = nullptr;
+    return first;
 }
 
 int main() {
